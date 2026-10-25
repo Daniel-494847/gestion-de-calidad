@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala de juegos</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Colores como variables: claro por defecto, oscuro abajo */
+:root{--bg:#F4F7FC;--grid:#DCE5F3;--ink:#1B2A4E;--mut:#5A6786;--card:#FFFFFF;--line:#C5D1E6;--acc:#FFC933;--ok:#1FA66A;--bad:#E4572E;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:400 17px/1.5 Nunito,system-ui,sans-serif;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1,h2,.grande{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.1}
+h1{font-size:2.2rem;font-weight:800}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:20px}
+.total{background:var(--acc);color:#1B2A4E;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.menu{display:grid;gap:12px}
+.juego-btn{display:flex;align-items:center;gap:16px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px}
+.juego-btn:hover{border-color:var(--acc)}
+.juego-btn .ico{font-size:2.2rem}
+.juego-btn b{font-family:"Baloo 2",sans-serif;font-size:1.3rem;display:block}
+.juego-btn small{color:var(--mut)}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:18px}
+.barra{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.volver{background:none;border:2px solid var(--line);border-radius:10px;padding:4px 12px}
+.info{color:var(--mut);margin:0 0 12px}
+.grande{font-size:2.6rem;font-weight:800;text-align:center;margin:10px 0}
+.accion{background:var(--acc);color:#1B2A4E;border:0;border-radius:10px;padding:10px 20px;font-weight:700;margin:4px}
+.centro{text-align:center}
+/* Memoria */
+.tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.carta{aspect-ratio:1;font-size:2rem;background:var(--line);border:0;border-radius:12px}
+.carta.up{background:var(--card);border:2px solid var(--acc)}
+.carta.ok{border-color:var(--ok)}
+/* Cálculo */
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opciones button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px;font-size:1.4rem;font-weight:700}
+.opciones button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opciones button.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+/* Atrapa */
+.arena{position:relative;height:300px;border:2px dashed var(--line);border-radius:12px;overflow:hidden}
+.blanco{position:absolute;width:56px;height:56px;font-size:1.9rem;background:var(--acc);border:0;border-radius:50%}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Sala de juegos</h1><span class="total" id="total"></span></header>
+  <div id="vista"></div>
+</main>
+<script>
+// ---------- Utilidades ----------
+const $ = s => document.querySelector(s);
+const r = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a; // número al azar entre a y b
+let limpiar = null;           // función para detener temporizadores del juego actual
+let rec = {};                 // mejores puntajes por juego
+try { rec = JSON.parse(localStorage.getItem("sala-records")) || {}; } catch (e) {}
+const guardar = () => { try { localStorage.setItem("sala-records", JSON.stringify(rec)); } catch (e) {} };
+
+// ---------- Juegos ----------
+// Para agregar un juego nuevo: suma un objeto aquí con su función iniciar(escena, fin)
+const GAMES = [
+  { id: "memoria", nombre: "Memoria", icono: "🧠", desc: "Encuentra los 8 pares", iniciar: memoria },
+  { id: "calculo", nombre: "Cálculo mental", icono: "➕", desc: "10 operaciones, elige la correcta", iniciar: calculo },
+  { id: "atrapa", nombre: "Atrapa el blanco", icono: "🎯", desc: "20 segundos de puntería", iniciar: atrapa }
+];
+
+function memoria(el, fin) {
+  const emo = ["🍎", "🚌", "📚", "🦙", "⚽", "🌵", "🎒", "☀️"];
+  const cartas = [...emo, ...emo].sort(() => Math.random() - 0.5);
+  let abiertas = [], intentos = 0, pares = 0, bloqueo = false;
+  el.innerHTML = '<p class="info">Intentos: <b id="m-i">0</b></p><div class="tablero"></div>';
+  const tab = el.querySelector(".tablero");
+  cartas.forEach(e => {
+    const b = document.createElement("button");
+    b.className = "carta"; b.setAttribute("aria-label", "Carta oculta");
+    b.onclick = () => {
+      if (bloqueo || b.classList.contains("up")) return;
+      b.textContent = e; b.classList.add("up"); abiertas.push(b);
+      if (abiertas.length < 2) return;
+      intentos++; $("#m-i").textContent = intentos;
+      const [x, y] = abiertas; abiertas = [];
+      if (x.textContent === y.textContent) {            // acierto
+        x.classList.add("ok"); y.classList.add("ok"); pares++;
+        if (pares === 8) fin(Math.max(10, 100 - (intentos - 8) * 5), "Terminaste en " + intentos + " intentos.");
+      } else {                                          // fallo: se voltean de nuevo
+        bloqueo = true;
+        setTimeout(() => { [x, y].forEach(c => { c.textContent = ""; c.classList.remove("up"); }); bloqueo = false; }, 700);
+      }
+    };
+    tab.append(b);
+  });
+}
+
+function calculo(el, fin) {
+  let n = 0, pts = 0, resp;
+  el.innerHTML = '<p class="info">Pregunta <b id="c-n"></b> de 10. Puntos: <b id="c-p">0</b></p><p class="grande" id="c-q"></p><div class="opciones" id="c-o"></div>';
+  function nueva() {
+    if (n === 10) return fin(pts, "Acertaste " + pts / 10 + " de 10.");
+    n++; $("#c-n").textContent = n;
+    const a = r(2, 12), b = r(2, 12), op = ["+", "−", "×"][r(0, 2)];
+    resp = op === "+" ? a + b : op === "−" ? a - b : a * b;
+    $("#c-q").textContent = a + " " + op + " " + b + " = ?";
+    const s = new Set([resp]);
+    while (s.size < 4) s.add(resp + r(-10, 10));         // 3 opciones falsas distintas
+    const box = $("#c-o"); box.innerHTML = "";
+    [...s].sort(() => Math.random() - 0.5).forEach(v => {
+      const bt = document.createElement("button"); bt.textContent = v;
+      bt.onclick = () => {
+        box.querySelectorAll("button").forEach(x => x.disabled = true);
+        bt.classList.add(v === resp ? "ok" : "bad");
+        if (v === resp) { pts += 10; $("#c-p").textContent = pts; }
+        setTimeout(nueva, 600);
+      };
+      box.append(bt);
+    });
+  }
+  nueva();
+}
+
+function atrapa(el, fin) {
+  let t = 20, pts = 0;
+  el.innerHTML = '<p class="info">Tiempo: <b id="a-t">20</b> s. Puntos: <b id="a-p">0</b></p><div class="arena"><button class="blanco" aria-label="Blanco">🎯</button></div>';
+  const arena = el.querySelector(".arena"), bl = el.querySelector(".blanco");
+  const mover = () => { bl.style.left = r(0, arena.clientWidth - 56) + "px"; bl.style.top = r(0, arena.clientHeight - 56) + "px"; };
+  bl.onclick = () => { pts += 5; $("#a-p").textContent = pts; mover(); };
+  mover();
+  const timer = setInterval(() => {
+    t--; $("#a-t").textContent = t;
+    if (t <= 0) { clearInterval(timer); fin(pts, "Se acabó el tiempo."); }
+  }, 1000);
+  limpiar = () => clearInterval(timer);                 // se detiene si vuelves al menú
+}
+
+// ---------- Sistema (menú, puntajes, pantalla de resultado) ----------
+function total() { $("#total").textContent = "⭐ " + Object.values(rec).reduce((a, b) => a + b, 0) + " pts"; }
+
+function menu() {
+  if (limpiar) { limpiar(); limpiar = null; }
+  total();
+  const v = $("#vista"); v.innerHTML = '<div class="menu"></div>';
+  GAMES.forEach(g => {
+    const b = document.createElement("button"); b.className = "juego-btn";
+    b.innerHTML = '<span class="ico">' + g.icono + '</span><span><b>' + g.nombre + '</b><small>' + g.desc + ' (mejor: ' + (rec[g.id] || 0) + ')</small></span>';
+    b.onclick = () => abrir(g);
+    v.firstChild.append(b);
+  });
+}
+
+function abrir(g) {
+  if (limpiar) { limpiar(); limpiar = null; }
+  const v = $("#vista");
+  v.innerHTML = '<div class="panel"><div class="barra"><h2>' + g.nombre + '</h2><button class="volver">Menú</button></div><div id="escena"></div></div>';
+  v.querySelector(".volver").onclick = menu;
+  g.iniciar($("#escena"), (p, msg) => terminar(g, p, msg));
+}
+
+function terminar(g, p, msg) {
+  if (p > (rec[g.id] || 0)) { rec[g.id] = p; guardar(); }
+  total();
+  const e = $("#escena");
+  e.innerHTML = '<div class="centro"><p class="grande">' + p + ' puntos</p><p>' + msg + '</p><p class="info">Tu mejor puntaje: ' + rec[g.id] + '</p></div>';
+  const again = document.createElement("button"); again.className = "accion"; again.textContent = "Jugar de nuevo"; again.onclick = () => abrir(g);
+  const home = document.createElement("button"); home.className = "accion"; home.textContent = "Volver al menú"; home.onclick = menu;
+  e.firstChild.append(again, home);
+}
+
+menu();
+</script>
+</body>
+</html>
