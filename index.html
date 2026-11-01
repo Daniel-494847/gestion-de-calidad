@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sala de juegos</title>
+<title>Sala de Juegos · Gestión de Calidad</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* Colores como variables: claro por defecto, oscuro abajo */
@@ -53,7 +53,7 @@ button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 </head>
 <body>
 <main>
-  <header><img src="niños.jpg" alt="Niños" class="logo"><h1>Sala de juegos</h1><span class="total" id="total"></span></header>
+  <header><img src="niños.jpg" alt="Logo Sala de Juegos" class="logo"><h1>Sala de Juegos</h1><span class="total" id="total"></span></header>
   <div id="vista"></div>
 </main>
 <script>
@@ -68,10 +68,10 @@ const guardar = () => { try { localStorage.setItem("sala-records", JSON.stringif
 // ---------- Juegos ----------
 // Para agregar un juego nuevo: suma un objeto aquí con su función iniciar(escena, fin)
 const GAMES = [
-  { id: "memoria", nombre: "Memoria", icono: "🧠", desc: "Encuentra los 8 pares", iniciar: memoria },
-  { id: "calculo", nombre: "Cálculo mental", icono: "➕", desc: "10 operaciones, elige la correcta", iniciar: calculo },
-  { id: "atrapa", nombre: "Atrapa el blanco", icono: "🎯", desc: "20 segundos de puntería", iniciar: atrapa },
-  { id: "reaccion", nombre: "Reacción", icono: "⚡", desc: "Reflejos y velocidad", iniciar: reaccion }
+  { id: "memoria", nombre: "Memoria", icono: "🧠", desc: "Encuentra las 8 parejas iguales", iniciar: memoria },
+  { id: "calculo", nombre: "Cálculo mental", icono: "➕", desc: "10 operaciones matemáticas, elige el resultado correcto", iniciar: calculo },
+  { id: "atrapa", nombre: "Atrapa el blanco", icono: "🎯", desc: "20 segundos para tocar el blanco", iniciar: atrapa },
+  { id: "reaccion", nombre: "Reacción", icono: "⚡", desc: "Prueba tus reflejos y velocidad de reacción", iniciar: reaccion }
 ];
 
 function memoria(el, fin) {
@@ -91,7 +91,7 @@ function memoria(el, fin) {
       const [x, y] = abiertas; abiertas = [];
       if (x.textContent === y.textContent) {            // acierto
         x.classList.add("ok"); y.classList.add("ok"); pares++;
-        if (pares === 8) fin(Math.max(10, 100 - (intentos - 8) * 5), "Terminaste en " + intentos + " intentos.");
+        if (pares === 8) fin(Math.max(10, 100 - (intentos - 8) * 5), "Terminaste en " + intentos + (intentos === 1 ? " intento." : " intentos."));
       } else {                                          // fallo: se voltean de nuevo
         bloqueo = true;
         setTimeout(() => { [x, y].forEach(c => { c.textContent = ""; c.classList.remove("up"); }); bloqueo = false; }, 700);
@@ -105,7 +105,7 @@ function calculo(el, fin) {
   let n = 0, pts = 0, resp;
   el.innerHTML = '<p class="info">Pregunta <b id="c-n"></b> de 10. Puntos: <b id="c-p">0</b></p><p class="grande" id="c-q"></p><div class="opciones" id="c-o"></div>';
   function nueva() {
-    if (n === 10) return fin(pts, "Acertaste " + pts / 10 + " de 10.");
+    if (n === 10) return fin(pts, "Acertaste " + Math.round(pts / 10) + " de 10.");
     n++; $("#c-n").textContent = n;
     const a = r(2, 12), b = r(2, 12), op = ["+", "−", "×"][r(0, 2)];
     resp = op === "+" ? a + b : op === "−" ? a - b : a * b;
