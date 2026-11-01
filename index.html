@@ -69,7 +69,8 @@ const guardar = () => { try { localStorage.setItem("sala-records", JSON.stringif
 const GAMES = [
   { id: "memoria", nombre: "Memoria", icono: "🧠", desc: "Encuentra los 8 pares", iniciar: memoria },
   { id: "calculo", nombre: "Cálculo mental", icono: "➕", desc: "10 operaciones, elige la correcta", iniciar: calculo },
-  { id: "atrapa", nombre: "Atrapa el blanco", icono: "🎯", desc: "20 segundos de puntería", iniciar: atrapa }
+  { id: "atrapa", nombre: "Atrapa el blanco", icono: "🎯", desc: "20 segundos de puntería", iniciar: atrapa },
+  { id: "reaccion", nombre: "Reacción", icono: "⚡", desc: "Reflejos y velocidad", iniciar: reaccion }
 ];
 
 function memoria(el, fin) {
@@ -137,6 +138,38 @@ function atrapa(el, fin) {
     if (t <= 0) { clearInterval(timer); fin(pts, "Se acabó el tiempo."); }
   }, 1000);
   limpiar = () => clearInterval(timer);                 // se detiene si vuelves al menú
+}
+
+function reaccion(el, fin) {
+  let ronda = 0, pts = 0, mejor = 9999, t0 = 0;
+  const TOTAL = 5;
+  el.innerHTML =
+    '<p class="info">Ronda <b id="r-n">0</b> de ' + TOTAL + '</p>' +
+    '<p class="grande" id="r-msg">¡Espera la señal!</p>' +
+    '<p class="info">Mejor: <b id="r-best">--</b> ms</p>' +
+    '<button class="accion" id="r-bt" style="display:none">¡Haz clic!</button>';
+  const msg = $("r-msg"), bt = $("r-bt"), best = $("r-best");
+  let esperando = false;
+  function iniciarRonda() {
+    if (ronda === TOTAL) { fin(pts, "Rondas completadas. Puntaje: " + pts); return; }
+    ronda++; $("r-n").textContent = ronda;
+    msg.textContent = "¡Espera la señal!"; bt.style.display = "none"; esperando = false;
+    setTimeout(() => {
+      msg.textContent = "¡YA!";
+      t0 = performance.now();
+      bt.style.display = "inline-block";
+      esperando = true;
+    }, r(1500, 4000));
+  }
+  bt.onclick = () => {
+    if (!esperando) return;
+    const rt = Math.round(performance.now() - t0);
+    if (rt < mejor) { mejor = rt; best.textContent = mejor + " ms"; }
+    pts += Math.max(0, 500 - rt);
+    esperando = false; bt.style.display = "none";
+    setTimeout(iniciarRonda, 1000);
+  };
+  iniciarRonda();
 }
 
 // ---------- Sistema (menú, puntajes, pantalla de resultado) ----------
