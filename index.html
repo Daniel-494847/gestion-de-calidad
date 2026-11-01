@@ -3,8 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sala de Juegos · Gestión de Calidad</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<meta name="description" content="Sala de Juegos · Gestión de Calidad. Cuatro juegos educativos: Memoria, Cálculo mental, Atrapa el blanco y Reacción. Récords guardados localmente.">
+<meta name="keywords" content="juegos educativos, memoria, cálculo mental, reacción, gestión de calidad, niños, aprendizaje">
+<meta name="author" content="Gestión de Calidad">
+<meta name="theme-color" content="#FFC933">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet"></noscript>
+<meta property="og:title" content="Sala de Juegos · Gestión de Calidad">
+<meta property="og:description" content="Cuatro juegos educativos para entrenar la memoria, el cálculo, la puntería y los reflejos.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sala de Juegos · Gestión de Calidad">
+<meta name="twitter:description" content="Juegos educativos: Memoria, Cálculo mental, Atrapa el blanco y Reacción.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFC933'/%3E%3Ctext x='50' y='65' font-family='Arial' font-size='50' text-anchor='middle' fill='%231B2A4E'%3E%F0%9F%97%8E%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sala de Juegos">
+<meta name="apple-mobile-web-app-status-bar-style" content="#FFC933">
+<meta name="msapplication-TileColor" content="#FFC933">
 <style>
 /* ========== Variables y base ========== */
 :root{
@@ -44,7 +62,7 @@ body{
   background-size:26px 26px;
   transition:background 0.3s ease,color 0.3s ease;
 }
-main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+main#contenido-principal{max-width:640px;margin:0 auto;padding:20px 16px 40px}
 /* ========== Tipografía ========== */
 h1,h2,.grande{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.1}
 h1{font-size:2.2rem;font-weight:800}
@@ -360,14 +378,34 @@ button:active{transform:scale(0.97);transition:transform 0.1s ease}
   0%{transform:translateY(-10vh) rotate(0deg);opacity:1}
   100%{transform:translateY(110vh) rotate(720deg);opacity:0}
 }
+
+/* ========== Accesibilidad: saltar al contenido ========== */
+.skip-link{
+  position:absolute;
+  top:-10000px;
+  left:0;
+  background:var(--acc);
+  color:#1B2A4E;
+  padding:8px 16px;
+  font-weight:700;
+  z-index:101;
+  border-radius:4px;
+  text-decoration:none;
+}
+.skip-link:focus{
+  top:10px;
+  left:10px;
+  outline:3px solid var(--acc);
+}
 </style>
 </head>
 <body>
-<main>
-  <header>
+  <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+<main id="contenido-principal">
+  <header role="banner">
   <div class="header-top">
-    <img src="niños.jpg" alt="Logo Sala de Juegos" class="logo">
-    <button class="tema-toggle" id="tema-bt" title="Cambiar tema">🌓</button>
+    <img src="niños.jpg" alt="Logo Sala de Juegos" class="logo" width="120" height="120" loading="lazy" decoding="async">
+    <button class="tema-toggle" id="tema-bt" title="Cambiar tema" aria-pressed="false">🌓</button>
   </div>
   <h1>Sala de Juegos</h1>
   <p class="subtitulo">Gestión de Calidad · Entretenimiento educativo</p>
@@ -376,7 +414,7 @@ button:active{transform:scale(0.97);transition:transform 0.1s ease}
     <span id="sesion-juegos">0 jugados</span> ·
     <span id="sesion-tiempo">0:00</span>
   </div>
-  <button class="ayuda-toggle" id="ayuda-bt" title="Instrucciones">❓</button>
+  <button class="ayuda-toggle" id="ayuda-bt" title="Instrucciones" aria-label="Abrir instrucciones">❓</button>
 </header>
   <div id="vista"></div>
 </main>
@@ -616,6 +654,7 @@ function menu() {
     const b = document.createElement("button"); b.className = "juego-btn";
     b.innerHTML = '<span class="ico">' + g.icono + '</span><span><b>' + g.nombre + '</b><small>' + g.desc + ' (mejor: ' + (rec[g.id] || 0) + ')</small></span>';
     b.onclick = () => abrir(g);
+    b.setAttribute("aria-label", "Jugar a " + g.nombre + ". " + g.desc + ". Mejor puntaje: " + (rec[g.id] || 0) + " puntos.");
     v.firstChild.append(b);
   });
 }
@@ -626,6 +665,7 @@ function abrir(g) {
   const v = $("#vista");
   v.innerHTML = '<div class="panel"><div class="barra"><h2>' + g.nombre + '</h2><button class="volver">Menú</button></div><div id="escena"></div></div>';
   v.querySelector(".volver").onclick = () => { sonido("click"); menu(); };
+  v.querySelector(".volver").setAttribute("aria-label", "Volver al menú principal");
   g.iniciar($("#escena"), (p, msg) => terminar(g, p, msg));
 }
 
@@ -640,8 +680,8 @@ function terminar(g, p, msg) {
   else if (p >= 20) { emoji = "🥉"; }
   else { emoji = "💪"; sonido("error"); }
   e.innerHTML = '<div class="centro"><p class="grande">' + emoji + ' ' + p + ' puntos</p><p>' + msg + '</p><p class="info">Tu mejor puntaje: ' + rec[g.id] + '</p></div>';
-  const again = document.createElement("button"); again.className = "accion"; again.textContent = "Jugar de nuevo"; again.onclick = () => abrir(g);
-  const home = document.createElement("button"); home.className = "accion"; home.textContent = "Volver al menú"; home.onclick = menu;
+  const again = document.createElement("button"); again.className = "accion"; again.textContent = "Jugar de nuevo"; again.onclick = () => abrir(g); again.setAttribute("aria-label", "Jugar de nuevo a " + g.nombre);
+  const home = document.createElement("button"); home.className = "accion"; home.textContent = "Volver al menú"; home.onclick = menu; home.setAttribute("aria-label", "Volver al menú principal");
   e.firstChild.append(again, home);
 }
 
