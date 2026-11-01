@@ -6,54 +6,281 @@
 <title>Sala de Juegos · Gestión de Calidad</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* Colores como variables: claro por defecto, oscuro abajo */
-:root{--bg:#F4F7FC;--grid:#DCE5F3;--ink:#1B2A4E;--mut:#5A6786;--card:#FFFFFF;--line:#C5D1E6;--acc:#FFC933;--ok:#1FA66A;--bad:#E4572E;color-scheme:light;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark}
+/* ========== Variables y base ========== */
+:root{
+  --bg:#F4F7FC;
+  --grid:#DCE5F3;
+  --ink:#1B2A4E;
+  --mut:#5A6786;
+  --card:#FFFFFF;
+  --line:#C5D1E6;
+  --acc:#FFC933;
+  --ok:#1FA66A;
+  --bad:#E4572E;
+  --shadow:0 6px 18px rgba(27,42,78,0.08);
+  --shadow-hover:0 12px 28px rgba(27,42,78,0.14);
+  --radius:16px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101A33;--grid:#1A2747;--ink:#EAF0FF;--mut:#9AA9CC;--card:#17234A;--line:#2C3C69;color-scheme:dark;
+}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:400 17px/1.5 Nunito,system-ui,sans-serif;
-background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--ink);
+  font:400 17px/1.5 Nunito,system-ui,sans-serif;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;
+  transition:background 0.3s ease,color 0.3s ease;
+}
 main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+/* ========== Tipografía ========== */
 h1,h2,.grande{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.1}
 h1{font-size:2.2rem;font-weight:800}
-.logo{width:120px;height:120px;border-radius:16px;display:block;margin:0 auto 12px}
-header{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px}
-.total{background:var(--acc);color:#1B2A4E;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap}
+.subtitulo{
+  color:var(--mut);
+  font-size:0.95rem;
+  margin:4px 0 16px;
+  text-align:center;
+}
+
+/* ========== Header ========== */
+.logo{
+  width:120px;
+  height:120px;
+  border-radius:16px;
+  display:block;
+  margin:0 auto 12px;
+  box-shadow:var(--shadow);
+  object-fit:cover;
+}
+header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  margin-bottom:24px;
+  padding:16px;
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+.tema-toggle{
+  background:var(--line);
+  border:2px solid var(--line);
+  border-radius:50%;
+  width:44px;
+  height:44px;
+  font-size:1.4rem;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:transform 0.2s ease,background 0.2s ease,border-color 0.2s ease;
+}
+.tema-toggle:hover{
+  transform:rotate(15deg);
+  background:var(--acc);
+  border-color:var(--acc);
+  color:#1B2A4E;
+}
+.total{
+  background:var(--acc);
+  color:#1B2A4E;
+  font-weight:700;
+  padding:6px 14px;
+  border-radius:999px;
+  white-space:nowrap;
+  font-family:"Baloo 2",system-ui,sans-serif;
+  font-size:1.1rem;
+  box-shadow:var(--shadow);
+}
+
+/* ========== Botones generales ========== */
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:active{transform:scale(0.97);transition:transform 0.1s ease}
+
+/* ========== Menú principal ========== */
 .menu{display:grid;gap:12px}
-.juego-btn{display:flex;align-items:center;gap:16px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px}
-.juego-btn:hover{border-color:var(--acc)}
-.juego-btn .ico{font-size:2.2rem}
-.juego-btn b{font-family:"Baloo 2",sans-serif;font-size:1.3rem;display:block}
-.juego-btn small{color:var(--mut)}
-.panel{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:18px}
-.barra{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.volver{background:none;border:2px solid var(--line);border-radius:10px;padding:4px 12px}
-.info{color:var(--mut);margin:0 0 12px}
-.grande{font-size:2.6rem;font-weight:800;text-align:center;margin:10px 0}
-.accion{background:var(--acc);color:#1B2A4E;border:0;border-radius:10px;padding:10px 20px;font-weight:700;margin:4px}
+.juego-btn{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  text-align:left;
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow);
+  transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+}
+.juego-btn:hover{
+  transform:translateY(-3px);
+  border-color:var(--acc);
+  box-shadow:var(--shadow-hover);
+}
+.juego-btn .ico{font-size:2.4rem}
+.juego-btn b{
+  font-family:"Baloo 2",sans-serif;
+  font-size:1.35rem;
+  display:block;
+}
+.juego-btn small{color:var(--mut);font-size:0.9rem}
+
+/* ========== Paneles de juego ========== */
+.panel{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+.barra{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+  gap:12px;
+}
+.barra h2{font-size:1.8rem}
+.volver{
+  background:none;
+  border:2px solid var(--line);
+  border-radius:10px;
+  padding:6px 14px;
+  font-size:0.95rem;
+  transition:border-color 0.2s ease;
+}
+.volver:hover{border-color:var(--acc)}
+.info{
+  color:var(--mut);
+  margin:0 0 12px;
+  font-size:0.95rem;
+}
+.grande{
+  font-size:2.8rem;
+  font-weight:800;
+  text-align:center;
+  margin:12px 0;
+}
+.accion{
+  background:var(--acc);
+  color:#1B2A4E;
+  border:0;
+  border-radius:10px;
+  padding:12px 22px;
+  font-weight:700;
+  margin:6px 4px;
+  font-family:"Baloo 2",sans-serif;
+  font-size:1.05rem;
+  box-shadow:var(--shadow);
+  transition:background 0.2s ease,transform 0.1s ease;
+}
+.accion:hover{background:#eabb2a}
 .centro{text-align:center}
-/* Memoria */
-.tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.carta{aspect-ratio:1;font-size:2rem;background:var(--line);border:0;border-radius:12px}
-.carta.up{background:var(--card);border:2px solid var(--acc)}
-.carta.ok{border-color:var(--ok)}
-/* Cálculo */
-.opciones{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opciones button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px;font-size:1.4rem;font-weight:700}
+
+/* ========== Memoria ========== */
+.tablero{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(70px,1fr));
+  gap:10px;
+}
+.carta{
+  aspect-ratio:1;
+  font-size:2rem;
+  background:var(--line);
+  border:0;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+}
+.carta:hover:not(.up):not(.ok){background:var(--mut);opacity:0.9}
+.carta.up{
+  background:var(--card);
+  border:2px solid var(--acc);
+  box-shadow:var(--shadow-hover);
+}
+.carta.ok{border-color:var(--ok);box-shadow:0 0 0 3px rgba(31,166,106,0.2)}
+
+/* ========== Cálculo ========== */
+.opciones{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.opciones button{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:12px;
+  padding:16px;
+  font-size:1.5rem;
+  font-weight:700;
+  box-shadow:var(--shadow);
+  transition:transform 0.1s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+}
+.opciones button:hover{border-color:var(--acc);transform:translateY(-2px)}
 .opciones button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
 .opciones button.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
-/* Atrapa */
-.arena{position:relative;height:300px;border:2px dashed var(--line);border-radius:12px;overflow:hidden}
-.blanco{position:absolute;width:56px;height:56px;font-size:1.9rem;background:var(--acc);border:0;border-radius:50%}
+
+/* ========== Atrapa ========== */
+.arena{
+  position:relative;
+  height:300px;
+  border:2px dashed var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(255,255,255,0.03);
+}
+.blanco{
+  position:absolute;
+  width:56px;
+  height:56px;
+  font-size:1.9rem;
+  background:var(--acc);
+  border:0;
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform 0.15s ease;
+}
+.blanco:active{transform:scale(0.85)}
+
+/* ========== Utilidades ========== */
+.oculto{display:none}
+.sombra-ok{box-shadow:0 0 0 4px rgba(31,166,106,0.3)}
+.sombra-bad{box-shadow:0 0 0 4px rgba(228,87,46,0.3)}
 </style>
 </head>
 <body>
 <main>
-  <header><img src="niños.jpg" alt="Logo Sala de Juegos" class="logo"><h1>Sala de Juegos</h1><span class="total" id="total"></span></header>
+  <header>
+  <div class="header-top">
+    <img src="niños.jpg" alt="Logo Sala de Juegos" class="logo">
+    <button class="tema-toggle" id="tema-bt" title="Cambiar tema">🌓</button>
+  </div>
+  <h1>Sala de Juegos</h1>
+  <p class="subtitulo">Gestión de Calidad · Entretenimiento educativo</p>
+  <span class="total" id="total"></span>
+</header>
   <div id="vista"></div>
 </main>
 <script>
@@ -64,6 +291,30 @@ let limpiar = null;           // función para detener temporizadores del juego 
 let rec = {};                 // mejores puntajes por juego
 try { rec = JSON.parse(localStorage.getItem("sala-records")) || {}; } catch (e) {}
 const guardar = () => { try { localStorage.setItem("sala-records", JSON.stringify(rec)); } catch (e) {} };
+
+// ---------- Tema claro/oscuro ----------
+const temaBt = $("#tema-bt");
+const savedTheme = localStorage.getItem("sala-tema");
+if (savedTheme) {
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  temaBt.textContent = savedTheme === "dark" ? "🌞" : "🌓";
+} else if (window.matchMedia("(prefers-color-scheme:dark)").matches) {
+  document.documentElement.setAttribute("data-theme", "dark");
+  temaBt.textContent = "🌞";
+}
+temaBt.onclick = () => {
+  const html = document.documentElement;
+  const esOscuro = html.getAttribute("data-theme") === "dark";
+  if (esOscuro) {
+    html.removeAttribute("data-theme");
+    localStorage.setItem("sala-tema", "light");
+    temaBt.textContent = "🌓";
+  } else {
+    html.setAttribute("data-theme", "dark");
+    localStorage.setItem("sala-tema", "dark");
+    temaBt.textContent = "🌞";
+  }
+};
 
 // ---------- Juegos ----------
 // Para agregar un juego nuevo: suma un objeto aquí con su función iniciar(escena, fin)
