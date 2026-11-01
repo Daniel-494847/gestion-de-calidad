@@ -142,35 +142,68 @@ function atrapa(el, fin) {
 }
 
 function reaccion(el, fin) {
-  let ronda = 0, pts = 0, mejor = 9999, t0 = 0;
-  const TOTAL = 5;
-  el.innerHTML =
-    '<p class="info">Ronda <b id="r-n">0</b> de ' + TOTAL + '</p>' +
-    '<p class="grande" id="r-msg">¡Espera la señal!</p>' +
-    '<p class="info">Mejor: <b id="r-best">--</b> ms</p>' +
-    '<button class="accion" id="r-bt" style="display:none">¡Haz clic!</button>';
-  const msg = $("r-msg"), bt = $("r-bt"), best = $("r-best");
-  let esperando = false;
-  function iniciarRonda() {
-    if (ronda === TOTAL) { fin(pts, "Rondas completadas. Puntaje: " + pts); return; }
-    ronda++; $("r-n").textContent = ronda;
-    msg.textContent = "¡Espera la señal!"; bt.style.display = "none"; esperando = false;
-    setTimeout(() => {
-      msg.textContent = "¡YA!";
-      t0 = performance.now();
-      bt.style.display = "inline-block";
-      esperando = true;
-    }, r(1500, 4000));
-  }
-  bt.onclick = () => {
-    if (!esperando) return;
-    const rt = Math.round(performance.now() - t0);
-    if (rt < mejor) { mejor = rt; best.textContent = mejor + " ms"; }
-    pts += Math.max(0, 500 - rt);
-    esperando = false; bt.style.display = "none";
-    setTimeout(iniciarRonda, 1000);
+  const NIVELES = {
+    facil:  { nombre: "Fácil",  min: 2000, max: 5000 },
+    medio:  { nombre: "Medio",  min: 1500, max: 4000 },
+    dificil:{ nombre: "Difícil",min: 800,  max: 3000 }
   };
-  iniciarRonda();
+  const TOTAL = 10;
+  let nivel = "medio", pts = 0, ronda = 0, mejor = 9999, t0 = 0, esperando = false;
+
+  function mostrarInicio() {
+    el.innerHTML =
+      '<p class="info">Selecciona dificultad</p>' +
+      '<div class="opciones" id="r-lv"></div>' +
+      '<p class="info" id="r-rec">Récord: -- ms</p>';
+    const box = $("r-lv");
+    Object.entries(NIVELES).forEach(([id, n]) => {
+      const b = document.createElement("button");
+      b.textContent = n.nombre;
+      b.onclick = () => { nivel = id; iniciarJuego(); };
+      box.append(b);
+    });
+    const key = "reaccion-" + nivel;
+    $("r-rec").textContent = "Récord " + NIVELES[nivel].nombre + ": " + (localStorage.getItem(key) || "--") + " ms";
+  }
+
+  function iniciarJuego() {
+    pts = 0; ronda = 0; mejor = 9999;
+    el.innerHTML =
+      '<p class="info">Ronda <b id="r-n">0</b> de ' + TOTAL + '</p>' +
+      '<p class="grande" id="r-msg">¡Espera la señal!</p>' +
+      '<p class="info">Mejor: <b id="r-best">--</b> ms  Puntos: <b id="r-p">0</b></p>' +
+      '<button class="accion" id="r-bt" style="display:none">¡Haz clic!</button>';
+    const msg = $("r-msg"), bt = $("r-bt"), best = $("r-best"), ptn = $("r-p");
+    function siguiente() {
+      if (ronda === TOTAL) {
+        fin(pts, "Juego terminado. Puntaje: " + pts);
+        const key = "reaccion-" + nivel;
+        const ant = localStorage.getItem(key);
+        if (ant === null || mejor < Number(ant)) localStorage.setItem(key, mejor);
+        return;
+      }
+      ronda++; $("r-n").textContent = ronda;
+      msg.textContent = "¡Espera la señal!";
+      bt.style.display = "none"; esperando = false;
+      setTimeout(() => {
+        msg.textContent = "¡YA!";
+        t0 = performance.now();
+        bt.style.display = "inline-block";
+        esperando = true;
+      }, r(NIVELES[nivel].min, NIVELES[nivel].max));
+    }
+    bt.onclick = () => {
+      if (!esperando) return;
+      const rt = Math.round(performance.now() - t0);
+      if (rt < mejor) { mejor = rt; best.textContent = mejor + " ms"; }
+      pts += Math.max(0, 600 - rt);
+      ptn.textContent = pts;
+      esperando = false; bt.style.display = "none";
+      setTimeout(siguiente, 900);
+    };
+    siguiente();
+  }
+  mostrarInicio();
 }
 
 // ---------- Sistema (menú, puntajes, pantalla de resultado) ----------
