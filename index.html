@@ -268,6 +268,98 @@ button:active{transform:scale(0.97);transition:transform 0.1s ease}
 .oculto{display:none}
 .sombra-ok{box-shadow:0 0 0 4px rgba(31,166,106,0.3)}
 .sombra-bad{box-shadow:0 0 0 4px rgba(228,87,46,0.3)}
+
+/* ========== Sesión y ayuda ========== */
+.sesion{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:0.85rem;
+  color:var(--mut);
+  margin-top:10px;
+}
+.ayuda-toggle{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:50%;
+  width:44px;
+  height:44px;
+  font-size:1.4rem;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:transform 0.2s ease,border-color 0.2s ease;
+}
+.ayuda-toggle:hover{
+  transform:rotate(-15deg);
+  border-color:var(--acc);
+}
+
+/* ========== Modal ========== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(27,42,78,0.45);
+  backdrop-filter:blur(4px);
+  z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.modal.abierto{display:flex}
+.modal-panel{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:20px;
+  padding:24px;
+  max-width:420px;
+  width:100%;
+  box-shadow:var(--shadow-hover);
+  position:relative;
+  animation:modalEntrada 0.3s ease;
+}
+@keyframes modalEntrada{
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.cerrar-modal{
+  position:absolute;
+  top:10px;
+  right:12px;
+  background:none;
+  border:0;
+  font-size:1.6rem;
+  cursor:pointer;
+  color:var(--mut);
+  line-height:1;
+}
+.cerrar-modal:hover{color:var(--ink)}
+.instr-lista{
+  color:var(--ink);
+  padding-left:20px;
+  margin:12px 0 16px;
+  line-height:1.6;
+}
+.instr-lista li{margin-bottom:8px}
+
+/* ========== Confeti ========== */
+.confeti{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:200;
+  overflow:hidden;
+}
+.particula{
+  position:absolute;
+  border-radius:2px;
+  animation:confetiCaer linear forwards;
+}
+@keyframes confetiCaer{
+  0%{transform:translateY(-10vh) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
 </style>
 </head>
 <body>
@@ -280,6 +372,11 @@ button:active{transform:scale(0.97);transition:transform 0.1s ease}
   <h1>Sala de Juegos</h1>
   <p class="subtitulo">Gestión de Calidad · Entretenimiento educativo</p>
   <span class="total" id="total"></span>
+  <div class="sesion">
+    <span id="sesion-juegos">0 jugados</span> ·
+    <span id="sesion-tiempo">0:00</span>
+  </div>
+  <button class="ayuda-toggle" id="ayuda-bt" title="Instrucciones">❓</button>
 </header>
   <div id="vista"></div>
 </main>
@@ -316,6 +413,53 @@ temaBt.onclick = () => {
   }
 };
 
+// ---------- Sistema de sesión ----------
+let sesionInicio = Date.now();
+let juegosJugados = 0;
+function actualizarSesion() {
+  const ahora = Date.now();
+  const seg = Math.floor((ahora - sesionInicio) / 1000);
+  const m = Math.floor(seg / 60).toString().padStart(2, "0");
+  const s = (seg % 60).toString().padStart(2, "0");
+  $("#sesion-tiempo").textContent = m + ":" + s;
+  $("#sesion-juegos").textContent = juegosJugados + " jugados";
+}
+setInterval(actualizarSesion, 1000);
+
+// ---------- Sonidos (Web Audio API) ----------
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function sonido(tipo) {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const ahora = audioCtx.currentTime;
+    if (tipo === "click") {
+      osc.type = "sine"; osc.frequency.setValueAtTime(600, ahora); osc.frequency.exponentialRampToValueAtTime(100, ahora + 0.1);
+      gain.gain.setValueAtTime(0.1, ahora); gain.gain.exponentialRampToValueAtTime(0.01, ahora + 0.1);
+      osc.start(ahora); osc.stop(ahora + 0.1);
+    } else if (tipo === "acierto") {
+      osc.type = "square"; osc.frequency.setValueAtTime(800, ahora); osc.frequency.setValueAtTime(1200, ahora + 0.1);
+      gain.gain.setValueAtTime(0.1, ahora); gain.gain.exponentialRampToValueAtTime(0.01, ahora + 0.2);
+      osc.start(ahora); osc.stop(ahora + 0.2);
+    } else if (tipo === "error") {
+      osc.type = "sawtooth"; osc.frequency.setValueAtTime(150, ahora); osc.frequency.exponentialRampToValueAtTime(80, ahora + 0.15);
+      gain.gain.setValueAtTime(0.1, ahora); gain.gain.exponentialRampToValueAtTime(0.01, ahora + 0.15);
+      osc.start(ahora); osc.stop(ahora + 0.15);
+    } else if (tipo === "ganar") {
+      [400, 500, 600, 800].forEach((f, i) => {
+        const o2 = audioCtx.createOscillator(); const g2 = audioCtx.createGain();
+        o2.connect(g2); g2.connect(audioCtx.destination);
+        const t = ahora + i * 0.1;
+        o2.type = "sine"; o2.frequency.setValueAtTime(f, t);
+        g2.gain.setValueAtTime(0.08, t); g2.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+        o2.start(t); o2.stop(t + 0.3);
+      });
+    }
+  } catch (e) {}
+}
+
 // ---------- Juegos ----------
 // Para agregar un juego nuevo: suma un objeto aquí con su función iniciar(escena, fin)
 const GAMES = [
@@ -342,8 +486,10 @@ function memoria(el, fin) {
       const [x, y] = abiertas; abiertas = [];
       if (x.textContent === y.textContent) {            // acierto
         x.classList.add("ok"); y.classList.add("ok"); pares++;
+        sonido("acierto");
         if (pares === 8) fin(Math.max(10, 100 - (intentos - 8) * 5), "Terminaste en " + intentos + (intentos === 1 ? " intento." : " intentos."));
       } else {                                          // fallo: se voltean de nuevo
+        sonido("error");
         bloqueo = true;
         setTimeout(() => { [x, y].forEach(c => { c.textContent = ""; c.classList.remove("up"); }); bloqueo = false; }, 700);
       }
@@ -369,7 +515,8 @@ function calculo(el, fin) {
       bt.onclick = () => {
         box.querySelectorAll("button").forEach(x => x.disabled = true);
         bt.classList.add(v === resp ? "ok" : "bad");
-        if (v === resp) { pts += 10; $("#c-p").textContent = pts; }
+        if (v === resp) { pts += 10; $("#c-p").textContent = pts; sonido("acierto"); }
+        else { sonido("error"); }
         setTimeout(nueva, 600);
       };
       box.append(bt);
@@ -383,7 +530,7 @@ function atrapa(el, fin) {
   el.innerHTML = '<p class="info">Tiempo: <b id="a-t">20</b> s. Puntos: <b id="a-p">0</b></p><div class="arena"><button class="blanco" aria-label="Blanco">🎯</button></div>';
   const arena = el.querySelector(".arena"), bl = el.querySelector(".blanco");
   const mover = () => { bl.style.left = r(0, arena.clientWidth - 56) + "px"; bl.style.top = r(0, arena.clientHeight - 56) + "px"; };
-  bl.onclick = () => { pts += 5; $("#a-p").textContent = pts; mover(); };
+  bl.onclick = () => { pts += 5; $("#a-p").textContent = pts; sonido("click"); mover(); };
   mover();
   const timer = setInterval(() => {
     t--; $("#a-t").textContent = t;
@@ -445,6 +592,7 @@ function reaccion(el, fin) {
     }
     bt.onclick = () => {
       if (!esperando) return;
+      sonido("click");
       const rt = Math.round(performance.now() - t0);
       if (rt < mejor) { mejor = rt; best.textContent = mejor + " ms"; }
       pts += Math.max(0, 600 - rt);
@@ -474,23 +622,80 @@ function menu() {
 
 function abrir(g) {
   if (limpiar) { limpiar(); limpiar = null; }
+  sonido("click");
   const v = $("#vista");
   v.innerHTML = '<div class="panel"><div class="barra"><h2>' + g.nombre + '</h2><button class="volver">Menú</button></div><div id="escena"></div></div>';
-  v.querySelector(".volver").onclick = menu;
+  v.querySelector(".volver").onclick = () => { sonido("click"); menu(); };
   g.iniciar($("#escena"), (p, msg) => terminar(g, p, msg));
 }
 
 function terminar(g, p, msg) {
+  juegosJugados++;
   if (p > (rec[g.id] || 0)) { rec[g.id] = p; guardar(); }
   total();
   const e = $("#escena");
-  e.innerHTML = '<div class="centro"><p class="grande">' + p + ' puntos</p><p>' + msg + '</p><p class="info">Tu mejor puntaje: ' + rec[g.id] + '</p></div>';
+  let emoji = "🎮";
+  if (p >= 80) { emoji = "🏆"; lanzarConfeti(); sonido("ganar"); }
+  else if (p >= 50) { emoji = "🥈"; }
+  else if (p >= 20) { emoji = "🥉"; }
+  else { emoji = "💪"; sonido("error"); }
+  e.innerHTML = '<div class="centro"><p class="grande">' + emoji + ' ' + p + ' puntos</p><p>' + msg + '</p><p class="info">Tu mejor puntaje: ' + rec[g.id] + '</p></div>';
   const again = document.createElement("button"); again.className = "accion"; again.textContent = "Jugar de nuevo"; again.onclick = () => abrir(g);
   const home = document.createElement("button"); home.className = "accion"; home.textContent = "Volver al menú"; home.onclick = menu;
   e.firstChild.append(again, home);
 }
 
 menu();
+
+// ---------- Modal de instrucciones ----------
+const modal = document.createElement("div");
+modal.className = "modal";
+modal.innerHTML =
+  '<div class="modal-panel">' +
+  '<button class="cerrar-modal" id="cerrar-modal">✕</button>' +
+  '<h2>Instrucciones</h2>' +
+  '<ul class="instr-lista">' +
+  '<li><b>Memoria:</b> Haz clic en las cartas para revelarlas. Encuentra las 8 parejas iguales en el menor número de intentos.</li>' +
+  '<li><b>Cálculo mental:</b> Resuelve 10 operaciones. Elige el resultado correcto entre 4 opciones. Cada acierto suma 10 puntos.</li>' +
+  '<li><b>Atrapa el blanco:</b> Toca el objetivo que se mueve por la pantalla durante 20 segundos. Cada toque suma 5 puntos.</li>' +
+  '<li><b>Reacción:</b> Espera la señal "¡YA!" y haz clic lo más rápido posible. 10 rondas por nivel.</li>' +
+  '</ul>' +
+  '<p class="info">Los récords se guardan automáticamente en tu navegador.</p>' +
+  '<button class="accion" id="cerrar-modal-bt">Entendido</button>' +
+  '</div>';
+document.body.appendChild(modal);
+const ayudaBt = $("#ayuda-bt");
+const cerrarModal = $("#cerrar-modal");
+const cerrarModalBt = $("#cerrar-modal-bt");
+function abrirModal() { modal.classList.add("abierto"); }
+function cerrarModalFn() { modal.classList.remove("abierto"); }
+ayudaBt.onclick = abrirModal;
+cerrarModal.onclick = cerrarModalFn;
+cerrarModalBt.onclick = cerrarModalFn;
+modal.onclick = (e) => { if (e.target === modal) cerrarModalFn(); };
+
+// ---------- Contenedor de confeti ----------
+const confeti = document.createElement("div");
+confeti.className = "confeti";
+document.body.appendChild(confeti);
+
+function lanzarConfeti() {
+  const colores = ["#FFC933", "#1FA66A", "#E4572E", "#5A6786", "#FFD700"];
+  confeti.innerHTML = "";
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement("div");
+    p.className = "particula";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.top = Math.random() * 100 + "vh";
+    p.style.background = colores[Math.floor(Math.random() * colores.length)];
+    p.style.width = (4 + Math.random() * 6) + "px";
+    p.style.height = p.style.width;
+    p.style.animationDuration = (1 + Math.random() * 2) + "s";
+    p.style.animationDelay = Math.random() * 0.5 + "s";
+    confeti.appendChild(p);
+  }
+  setTimeout(() => { confeti.innerHTML = ""; }, 4000);
+}
 </script>
 </body>
 </html>
