@@ -18,7 +18,8 @@ background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradien
 main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
 h1,h2,.grande{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.1}
 h1{font-size:2.2rem;font-weight:800}
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:20px}
+.logo{width:120px;height:120px;border-radius:16px;display:block;margin:0 auto 12px}
+header{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px}
 .total{background:var(--acc);color:#1B2A4E;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
@@ -52,7 +53,7 @@ button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 </head>
 <body>
 <main>
-  <header><h1>Sala de juegos</h1><span class="total" id="total"></span></header>
+  <header><img src="https://cdn-icons-png.flaticon.com/512/3016/3016474.png" alt="Logo juegos" class="logo"><h1>Sala de juegos</h1><span class="total" id="total"></span></header>
   <div id="vista"></div>
 </main>
 <script>
